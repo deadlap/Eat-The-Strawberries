@@ -1,9 +1,7 @@
 use kondi::{
-    Context, Game, GgezResult,
-    textures::Textures,
-    util::{Point2, Vector2},
-};
-use ggez::{graphics::{self, Image, DrawParam, spritebatch::{SpriteBatch, SpriteIdx}, Rect}};
+    Context, textures::Textures};
+
+use ggez::{graphics::{Image, Rect}};
 use crate::{
     utils::spritesheet::SpriteSheet,
 };
@@ -62,7 +60,7 @@ pub struct Mat {
 
 #[derive(Debug, Clone)]
 pub struct Palette {
-    materials: HashMap<String, DrawParam>,
+    pub block_materials: SpriteSheet,
 }
 
 impl Default for Palette {
@@ -81,102 +79,62 @@ impl Default for Palette {
             "dirt",
             "bricks",
         ];
-        let mut mats = HashMap::new();
+        let img_dims = Rect::new(0., 0., 192., 128.);
+        let mut mats = Vec::new();
         let mut c_w = 0.;
         let mut c_h = 0.;
-        for name in names {
-            mats.insert(name.to_string(), DrawParam::default().src(
-                SpriteSheet::to_size(Rect::new(
-                    0.,
-                    0.,
-                    192.,
-                    128.,
-                ),
-                    Rect::new(
-                        32.*c_w, 
-                        32.*c_h, 
-                        32.,
-                        32.,
-                    )
-                )));
+        for _name in &names {
+            let mut temp = Vec::new();
+            temp.push(
+                Rect::new(
+                    32.*c_w, 
+                    32.*c_h, 
+                    32.,
+                    32.,
+                ));
             c_w += 1.;
-            if (c_w*32.) > 192. {
+            mats.push(temp);
+            if (c_w*32.) >= img_dims.w {
                 c_h += 1.;
+                c_w = 0.;
             }
         }
         Palette {
-            materials: mats,
+            block_materials: SpriteSheet::new("materials/materials_spritesheet", img_dims, names, mats),
         }
     }
 }
 
 impl Palette {
-    pub fn new(names: Vec<&str>) -> Self {
-        let mut mats = HashMap::new();
-        // let img = t.get_img(ctx, texture);
-        let dp = DrawParam::default();
-        let w = 192.;
-        let h = ((names.len() as f32)*32./w).ceil();
+    pub fn new(ctx: &mut Context, textures: &Textures, texture: &str, names: Vec<&str>) -> Self {
+        let img_dims = textures.get_img(ctx, texture).dimensions();
+        let mut mats = Vec::new();
         let mut c_w = 0.;
         let mut c_h = 0.;
-        for name in names {
-            mats.insert(name.to_string(), DrawParam::default().src(
-                SpriteSheet::to_size(
-                    Rect::new(0.,0., w, h),
-                    Rect::new(
-                        32.*c_w,
-                        32.*c_h,
-                        32.,
-                        32.,
-                    )
-                )));
+        for _name in &names {
+            let mut temp = Vec::new();
+            temp.push(
+                Rect::new(
+                    32.*c_w,
+                    32.*c_h,
+                    32.,
+                    32.,
+                ));
             c_w += 1.;
-            if (c_w*32.) > w {
+            mats.push(temp);
+            if (c_w*32.) >= img_dims.w as f32 {
                 c_h += 1.;
+                c_w = 0.;
             }
         }
         Palette {
-            materials: mats,
+            block_materials: SpriteSheet::new(texture, img_dims, names, mats),
         }
     }
-    pub fn and(self, other: &Self) -> Self {
-        let Palette{materials} = self;
-        let mut mats = materials.to_vec();
-        
-        for &mat in &*other.materials {
-            if !mats.contains(&mat) {
-                mats.push(mat);
-            }
-        }
-
-        Palette {
-            materials: mats.into_boxed_slice(),
-        }
-    }
-    pub fn draw_mat(&self, i: u8, ctx: &mut Context, textures: &Textures, x: f32, y: f32, dp: graphics::DrawParam) -> GgezResult<()> {
-        let mat = self.materials[i as usize];
-
-        let img = get_img(ctx, assets, mat);
-        graphics::draw(ctx, &*img, (Point2::from(dp.dest) + Vector2::new(x, y),))
-    }
-    pub fn is_solid(&self, i: u8) -> bool {
-        is_solid(self.materials[i as usize])
-    }
-    #[inline]
-    pub fn get(&self, i: u8) -> Option<&str> {
-        self.materials.get(i as usize).copied()
-    }
-    #[inline]
-    pub fn find(&self, mat: &str) -> Option<u8> {
-        self.materials.iter().position(|s| &mat == s).map(|i| i as u8)
-    }
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.materials.len()
-    }
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.materials.is_empty()
-    }
-
+    // pub fn draw_mat(&self, ctx: &mut Context, mesh, name: String) -> GgezResult<()> {
+    //     // graphics::draw(ctx, &self.world_batch, dp)
+    //     // for (shape, name) in &self.static_shapes {
+    //     graphics::draw(ctx, , self.block_materials.spriteparts.get(sprite).unwrap()[0].dest(shape.pos))
+    //     // }
+    // }
 }

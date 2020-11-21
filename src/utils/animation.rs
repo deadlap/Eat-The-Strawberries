@@ -5,11 +5,13 @@
 // use ggez::{graphics::{Drawable, Color, Mesh, DrawMode, Rect, DrawParam}, GameResult};
 
 pub struct Animation {
+
 }
 
 impl Animation {
     pub fn new() -> Self {
         Animation {
+            
         }
     }
     // fn draw(&self, ctx: &mut Context, texes: &Textures) -> GameResult<()> {

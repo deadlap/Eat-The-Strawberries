@@ -957,7 +957,7 @@ checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 [[package]]
 name = "kondi"
 version = "0.0.1"
-source = "git+https://github.com/deadlap/kondi?branch=dev#ca414e4799a6aba0331c2c2c6b34feebdd20bc80"
+source = "git+https://github.com/deadlap/kondi?branch=dev#a09851efae64c4a1b8488d73d6897227e79e0bf5"
 dependencies = [
  "byteorder",
  "ggez",
