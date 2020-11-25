@@ -7,9 +7,10 @@ use crate::{
     DELTA,
 };
 
-const CORRECTION_PERCENT: f32 = 1.0;
+const CORRECTION_PERCENT: f32 = 0.4;
 const SLOP: f32 = 0.01;
 
+#[derive(Debug)]
 pub struct CollisionData<'a> {
     pub object_a: &'a mut Body,
     pub object_b: &'a mut Body,
@@ -49,11 +50,9 @@ impl<'a> CollisionData<'a> {
 
         let relative_vel = body_b.velocity-body_a.velocity;
         let vel_along_norm = relative_vel.dot(&self.normal);
-
         if vel_along_norm > 0. {
             return
         }
-        
         let rest = body_a.material.restitution.min(body_b.material.restitution);
         
         let mut impulse_scalar = -(1.+rest) * vel_along_norm;
@@ -62,6 +61,27 @@ impl<'a> CollisionData<'a> {
         let impulse = impulse_scalar*self.normal;
         body_a.add_vel(-1.*(body_a.mass_data.inv_mass*impulse));
         body_b.add_vel(body_b.mass_data.inv_mass*impulse);
+
+        let relative_vel = body_b.velocity-body_a.velocity;
+        let mut tangent = relative_vel - relative_vel.dot(&self.normal) * self.normal;
+        if tangent.norm() == 0. {
+            return
+        }
+        tangent.normalize_mut();
+
+        let mut magnitude = -relative_vel.dot(&tangent);
+        magnitude /= body_a.mass_data.inv_mass + body_b.mass_data.inv_mass;
+        let mu = (body_a.material.static_friction.powi(2)+body_b.material.static_friction.powi(2)).sqrt();
+
+        let friction_impulse: Vector2;
+        if magnitude.abs() < impulse_scalar * mu {
+            friction_impulse = magnitude*tangent;
+        } else {
+            let dyn_friction = ((body_a.material.dynamic_friction).powi(2)+(body_b.material.dynamic_friction).powi(2)).sqrt();
+            friction_impulse = -impulse_scalar * tangent * dyn_friction;
+        }
+        body_a.add_vel(-1.*(body_a.mass_data.inv_mass*friction_impulse));
+        body_b.add_vel(body_b.mass_data.inv_mass*friction_impulse);
     }
 
     pub fn positional_correction(&mut self) {
@@ -91,23 +111,29 @@ impl<'a> CollisionData<'a> {
             let ay_extent = rect_a.h/2.;
             let by_extent = rect_b.h/2.;
             let y_overlap = ay_extent+by_extent - norm.y.abs();
-            
             if y_overlap > 0. {
+                let new_norm: Vector2;
                 if x_overlap < y_overlap {
                     if norm.x < 0. {
-                        self.normal = Vector2::new(-1.,0.);
+                        // self.normal = Vector2::new(-1.,0.);
+                        new_norm = Vector2::new(-1.,0.);
                     } else {
-                        self.normal = Vector2::new(1.,0.);
+                        // self.normal = Vector2::new(1.,0.);
+                        new_norm =  Vector2::new(1.,0.);
                     }
                     self.penetration = x_overlap;
                 } else {
                     if norm.y < 0. {
-                        self.normal = Vector2::new(0.,-1.);
+                        new_norm = Vector2::new(0.,-1.);
+                        // self.normal = Vector2::new(0.,-1.);
                     } else {
-                        self.normal = Vector2::new(0.,1.);
+                        new_norm = Vector2::new(0.,1.);
+                        // self.normal = Vector2::new(0.,1.);
                     }
+                    // self.normal = norm.normalize();
                     self.penetration = y_overlap;
                 }
+                self.normal = new_norm;
                 return true;
             }
         }

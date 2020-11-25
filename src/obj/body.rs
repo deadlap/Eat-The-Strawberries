@@ -8,6 +8,8 @@ use crate::{
 pub struct Material {
     pub density: f32,
     pub restitution: f32,
+    pub static_friction: f32,
+    pub dynamic_friction: f32,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -77,11 +79,6 @@ impl Body {
     pub fn update(&mut self, delta: f32) {
         self.add_vel((self.force*self.mass_data.inv_mass + Vector2::new(0., util::GRAVITY) * self.gravity_scale)*delta);
         self.shape.move_by(self.velocity);
-        // if self.force.y.abs() > 0. {
-        //     self.add_force(Vector2::new(0.,delta*100.));
-        // } else if self.force.y.abs() <= delta {
-        //     self.force = Vector2::new(self.force.x,0.,);
-        // }
     }
     pub fn add_force(&mut self, change: Vector2) {
         self.force += change;

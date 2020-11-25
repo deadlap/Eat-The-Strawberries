@@ -61,7 +61,19 @@ impl Shape {
     pub fn rotate(&mut self, change: f32) {
         self.rot += change*DELTA;
     }
-    
+
+    pub fn scale(&mut self, change: Vector2) {
+        match &mut self.shape {
+            ShapeType::Rectangle{rect} => {
+                rect.scale(change.x/rect.w, change.y/rect.h);
+            },
+            ShapeType::Circle{circle} => {
+                circle.radius *= change.norm()/circle.radius;
+            }
+        }
+    }
+
+
     pub fn get_pos(&self) -> Point2 {
         match &self.shape {
             ShapeType::Rectangle{rect} => {

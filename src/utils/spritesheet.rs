@@ -2,16 +2,16 @@ use kondi::{textures::Textures, Context, GgezResult, util::{Point2, Vector2}};
 
 use std::collections::HashMap;
 use ggez::{graphics::{self, Rect, DrawParam}};
+use crate::{utils::util::Orientation};
 
 #[derive(Debug, Clone)]
 pub struct SpriteSheet {
     pub spritesheet: String,
-    // pub src_size: Vector2,
+    pub orientation: Orientation,
     pub spriteparts: HashMap<String, Vec<(DrawParam, Vector2)>>,
 }
 
 impl SpriteSheet {
-    // pub fn new(texture: &str, img_dims: Rect, src_size: Vector2, names: Vec<&str>, sprites: Vec<Vec<Rect>>) -> Self {
     pub fn new(texture: &str, img_dims: Rect, names: Vec<&str>, sprites: Vec<Vec<Rect>>) -> Self {
         let mut sprite_parts = HashMap::new();
         let dp = DrawParam::default();
@@ -27,6 +27,7 @@ impl SpriteSheet {
         SpriteSheet {
             spritesheet: texture.to_string(),
             spriteparts: sprite_parts,
+            orientation: Orientation::Right
         }
     }
     pub fn to_size(img_rect: Rect, cur_rect: Rect) -> Rect {
@@ -39,14 +40,33 @@ impl SpriteSheet {
     }
     pub fn draw(&self, ctx: &mut Context, t: &Textures, part_name: &str, index: usize, dest: Point2) -> GgezResult<()> {
         let img = t.get_img(ctx, &self.spritesheet).clone();
-        graphics::draw(ctx, &img,
-            (self.spriteparts.get(&part_name.to_string()).unwrap()[index].0).dest(dest))
+        let dp = self.spriteparts.get(&part_name.to_string()).unwrap()[index].0.clone();
+        let scale: Vector2;
+        if self.orientation == Orientation::Left {
+            scale = Vector2::new(-1.,1.);
+        } else {
+            scale = Vector2::new(1.,1.);
+        }
+        graphics::draw(ctx, &img, dp.dest(dest).scale(scale))
     }
     pub fn draw_with_offset(&self, ctx: &mut Context, t: &Textures, part_name: &str, index: usize, dest: Point2, src_size: Vector2) -> GgezResult<()> {
         let img = t.get_img(ctx, &self.spritesheet).clone();
         let src = self.spriteparts.get(&part_name.to_string()).unwrap()[index];
-        let new_dest = dest - (src.1 - src_size);
-        graphics::draw(ctx, &img, (src.0).dest(new_dest))
+        let dp = src.0;
+        let scale: Vector2; 
+        let new_dest: Point2;
+        if self.orientation == Orientation::Left {
+            new_dest = dest - (src.1 - src_size) + Vector2::new(src.1.x+src.1.x-src_size.x,0.);
+            scale = Vector2::new(-1.,1.);
+        } else {
+            scale = Vector2::new(1.,1.);
+            new_dest = dest - (src.1 - src_size);
+        }
+        graphics::draw(ctx, &img, dp.dest(new_dest).scale(scale))
+    }
+
+    pub fn change_orientation(&mut self, orientation: Orientation) {
+        self.orientation = orientation;
     }
     // pub fn change_Param(&mut self, ctx: &mut Context, part_name: &str, index: usize) {
         
