@@ -68,6 +68,13 @@ impl SpriteSheet {
     pub fn change_orientation(&mut self, orientation: Orientation) {
         self.orientation = orientation;
     }
+    pub fn switch_orientation(&mut self) {
+        if self.orientation == Orientation::Left {
+            self.orientation = Orientation::Right;
+        } else {
+            self.orientation = Orientation::Left;
+        }
+    }
     // pub fn change_Param(&mut self, ctx: &mut Context, part_name: &str, index: usize) {
         
     // }

@@ -167,9 +167,6 @@ impl Game for EatTheStrawberries {
                 data.resolve_collision();
                 let bob = if data.normal.y == 1. {2.} else {data.normal.x};
                 self.player.state_control(ctx, state, bob);
-                // if data.normal.y == 1. && self.player.body.velocity.y.abs() < 5.5 && self.player.state == PlayerState::Jumping {
-                // }
-                // self.player.resolve_collision(&data, ctx, state);
             }
         }
         Ok(())

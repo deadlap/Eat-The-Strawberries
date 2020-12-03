@@ -200,15 +200,16 @@ impl Player {
                 } else {
                     jump_vel += -48.*self.movement_force+(0.25*jump_vel);
                 }
+                self.spritesheet.switch_orientation();
             }
             self.body.add_vel(jump_vel);
             self.switch_state(PlayerState::Jumping);
         }
     }
     
-    pub fn to_wall(&mut self, ctx: &mut Context, state: &mut State) {
-        if state.is_down(ctx, util::SHIFT) && (self.state.can_attach_wall() || 
-            self.state == PlayerState::OnWall && self.body.velocity.y.abs() < 5.5) {
+    pub fn to_wall(&mut self, _ctx: &mut Context, _state: &mut State) {
+        // if state.is_down(ctx, util::SHIFT) && 
+        if (self.state.can_attach_wall()) || (self.state == PlayerState::OnWall && self.body.velocity.y.abs() < 5.5) {
             
             self.switch_state(PlayerState::OnWall);
             self.body.add_vel(Vector2::new(0.,-0.9*self.body.velocity.y));
@@ -223,8 +224,11 @@ impl Player {
     }
 
     pub fn state_control(&mut self, ctx: &mut Context, state: &mut State, col: f32) {
-        if col.abs() == 1.{ //|| self.state == PlayerState::OnWall {
+        if col.abs() == 1. {
             self.to_wall(ctx, state);
+            return;
+        }
+        if col.abs() != 2. {
             return;
         }
         if self.body.velocity.y.abs() < 5.5 {
