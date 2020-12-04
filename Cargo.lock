@@ -957,7 +957,7 @@ checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 [[package]]
 name = "kondi"
 version = "0.0.1"
-source = "git+https://github.com/deadlap/kondi?branch=dev#a09851efae64c4a1b8488d73d6897227e79e0bf5"
+source = "git+https://github.com/deadlap/kondi#fa8bf8ad30270164cc94877efe5b8d2091787bb5"
 dependencies = [
  "byteorder",
  "ggez",
@@ -1255,6 +1255,7 @@ dependencies = [
  "num-traits 0.2.14",
  "rand 0.7.3",
  "rand_distr",
+ "serde",
  "simba",
  "typenum",
 ]
@@ -1318,6 +1319,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "747d632c0c558b87dbabbe6a82f3b4ae03720d0646ac5b7b4dae89394be5f2c5"
 dependencies = [
  "num-traits 0.2.14",
+ "serde",
 ]
 
 [[package]]
@@ -1906,6 +1908,9 @@ name = "serde"
 version = "1.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b88fa983de7720629c9387e9f517353ed404164b1e482c970a90c1a4aaf7dc1a"
+dependencies = [
+ "serde_derive",
+]
 
 [[package]]
 name = "serde_derive"

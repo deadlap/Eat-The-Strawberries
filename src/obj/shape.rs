@@ -1,17 +1,18 @@
 use kondi::util::{Point2, Vector2};
 use ggez::graphics::Rect;
 use std::f32::consts::PI;
-use crate::DELTA;
-#[derive(Debug, Clone, Copy)]
+use crate::{DELTA, utils::save::RectDef};
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Circle {
     pub pos: Point2, 
     pub radius: f32,
 }
 
-#[derive(Debug, Clone, Copy)]
-// #[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum ShapeType{
     Rectangle {
+        #[serde(with = "RectDef")]
         rect: Rect,
     },
     Circle {
@@ -19,7 +20,7 @@ pub enum ShapeType{
     },
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Shape {
     pub rot: f32,
     pub shape: ShapeType,

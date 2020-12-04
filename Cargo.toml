@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-kondi = {git = "https://github.com/deadlap/kondi", branch = "dev"}
+kondi = {git = "https://github.com/deadlap/kondi", branch = "master"}
 bincode = "1"
 log = "0.4"
 byteorder = "1"
@@ -19,4 +19,4 @@ toml = "0.5"
 
 [dependencies.nalgebra]
 version = "0.23"
-features = ["mint"]
+features = ["mint", "serde-serialize"]

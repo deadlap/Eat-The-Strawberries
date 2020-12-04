@@ -1,9 +1,10 @@
 use kondi::{
-    GgezResult, textures::Textures, util::{Vector2}
+    GgezResult, textures::Textures, util::{Vector2}, object::Object, State,
 };
 
 use ggez::{
     Context,
+    error::GameError,
     graphics::{self, DrawParam, Rect, WrapMode},
 };
 
@@ -11,11 +12,11 @@ use crate::{
     obj::{body::Body},
 };
 
-// use std::path::Path;
-// use std::fs::File;
-// use std::io::{Write, BufRead, BufReader};
+use std::path::Path;
+use std::fs::File;
+use std::io::{Write, BufRead, BufReader};
 
-// use bincode;
+use bincode;
 
 mod material;
 pub use material::*;
@@ -31,9 +32,12 @@ pub struct World {
 }
 
 impl World {
-    pub fn draw_mat(&self, ctx: &mut Context, textures: &Textures) -> GgezResult<()> {
+}
+
+impl Object for World {
+    fn draw(&self, ctx: &mut Context, texes: &Textures) -> GgezResult<()> { 
         for (body, image) in &self.static_shapes {
-            let mut img = textures.get_img(ctx, &image).clone();
+            let mut img = texes.get_img(ctx, &image).clone();
             img.set_wrap(WrapMode::Tile, WrapMode::Tile);
             let scale = Vector2::new(
                 body.shape.width()/img.dimensions().w, 
@@ -47,14 +51,10 @@ impl World {
             };
             
             graphics::draw(ctx, &img, drawparams)?;
-            // let rect = Rect::new(0.,0., shape.width(), shape.height());
-            // let mesh = MeshBuilder::new()
-            //     .rectangle(DrawMode::fill(), rect, graphics::WHITE)
-            //     .texture(img.clone())
-            //     .build(ctx)?;
-            // graphics::draw(ctx, &mesh, drawparams)?;
         }
         Ok(())
+    }
+    fn update(&mut self, _ctx: &mut Context, _state: &mut State, _delta: f32) {
     }
 }
 
@@ -96,4 +96,34 @@ impl Level {
     pub fn add_dynamic_shape(&mut self, b: Body, s: String) {
         self.dynamic_shapes.push((b, s));
     }
+    pub fn load<P: AsRef<Path>>(path: P) -> GgezResult<Self> {
+        let mut reader = BufReader::new(File::open(path)?);
+        let mut ret = Level::new_default();
+        loop {
+            let mut buf = String::with_capacity(16);
+            reader.read_line(&mut buf)?;
+            match &*buf.trim_end() {
+                "" => continue,
+                "STATIC_SHAPES" => ret.static_shapes = bincode::deserialize_from(&mut reader)
+                    .map_err(|e| GameError::ResourceLoadError(format!("{:?}", e)))?,
+                "DYNAMIC_SHAPES" => ret.dynamic_shapes = bincode::deserialize_from(&mut reader)
+                    .map_err(|e| GameError::ResourceLoadError(format!("{:?}", e)))?,
+                "END" => break, 
+                _ => return Err(GameError::ResourceLoadError("Bad section".to_string()))
+            }
+        }
+        Ok(ret)
+    }
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> GgezResult<()> {
+        let mut file = File::create(path)?;
+        writeln!(file, "STATIC_SHAPES")?;
+        bincode::serialize_into(&mut file, &self.static_shapes)
+            .map_err(|e| GameError::ResourceLoadError(format!("{:?}", e)))?;
+        writeln!(file, "DYNAMIC_SHAPES")?;
+        bincode::serialize_into(&mut file, &self.dynamic_shapes)
+            .map_err(|e| GameError::ResourceLoadError(format!("{:?}", e)))?;
+        writeln!(file, "\nEND")?;
+        Ok(())
+    }
+    // Serialize, Deserialize
 }

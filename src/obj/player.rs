@@ -1,10 +1,9 @@
-use kondi::{textures::Textures, Context, State, GgezResult, util::Vector2};
+use kondi::{textures::Textures, Context, State, GgezResult, util::Vector2, object::Object};
 
 use ggez::graphics::Rect;
 use crate::{
     utils::{util, util::Orientation, animation::AnimationContainer, spritesheet::SpriteSheet},
     obj::{shape::{Shape, ShapeType}, body::{Body, Material}},
-    DELTA,
 };
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -152,39 +151,6 @@ impl Player {
             anim_container: a,
         }
     }
-    pub fn draw(&self, ctx: &mut Context, texes: &Textures) -> GgezResult<()> {
-        let img = self.state.get_str();
-        self.spritesheet.draw_with_offset(ctx, texes, img, self.anim_container.cur_step, self.body.shape.get_pos(), self.body.shape.dimensions())
-    }
-    
-    pub fn update(&mut self, ctx: &mut Context, state: &mut State, delta: f32) {
-        self.anim_container.update_timer();
-        if state.is_down(ctx, util::JUMP) {
-            self.jump();
-        }
-        if state.is_down(ctx, util::RIGHT) {
-            self.body.add_vel(self.movement_force * self.state.move_mult());
-            if self.state == PlayerState::OnWall {self.switch_state(PlayerState::Jumping);}
-            self.spritesheet.change_orientation(Orientation::Right);
-        }
-        if state.is_down(ctx, util::LEFT) {
-            self.body.add_vel(-self.movement_force * self.state.move_mult());
-            if self.state == PlayerState::OnWall {self.switch_state(PlayerState::Jumping);}
-            self.spritesheet.change_orientation(Orientation::Left);
-        }
-        if self.state != PlayerState::Jumping && self.state != PlayerState::OnWall {
-            self.state_control(ctx, state, 0.);
-        }
-
-        if self.state.is_crouched() {
-            self.body.shape.scale(self.crawl_hit_box);
-            // self.body.shape.move_by(self.crawl_hit_box-self.hit_box);
-        } else {
-            self.body.shape.scale(self.hit_box);
-        }
-        self.body.update(delta);
-    }
-
     pub fn jump(&mut self) {
         if self.body.velocity.y.abs() < 5.5 && self.state.can_jump() {
             let mut jump_vel = self.jump_vel;
@@ -208,9 +174,7 @@ impl Player {
     }
     
     pub fn to_wall(&mut self, _ctx: &mut Context, _state: &mut State) {
-        // if state.is_down(ctx, util::SHIFT) && 
         if (self.state.can_attach_wall()) || (self.state == PlayerState::OnWall && self.body.velocity.y.abs() < 5.5) {
-            
             self.switch_state(PlayerState::OnWall);
             self.body.add_vel(Vector2::new(0.,-0.9*self.body.velocity.y));
             if self.spritesheet.orientation == Orientation::Left {
@@ -251,6 +215,7 @@ impl Player {
             }
         }
     }
+    
     pub fn switch_state(&mut self, to_state: PlayerState) {
         if !(self.state == to_state) {
             self.anim_container.change_image(to_state.get_str());
@@ -267,13 +232,38 @@ impl Player {
     // }
 }
 
-// impl Object for Player {
-//     fn draw(&self, ctx: &mut Context, texes: &Textures) -> GgezResult<()> {
-//         // self.spritesheet.draw(ctx, texes, "idle", 0, self.body.shape.get_pos())
-//         Ok(())
-//     }
+impl Object for Player {
+    fn draw(&self, ctx: &mut Context, texes: &Textures) -> GgezResult<()> {
+        // self.spritesheet.draw(ctx, texes, "idle", 0, self.body.shape.get_pos())
+        let img = self.state.get_str();
+        self.spritesheet.draw_with_offset(ctx, texes, img, self.anim_container.cur_step, self.body.shape.get_pos(), self.body.shape.dimensions())
+    }
 
-//     fn update(&mut self, ctx: &mut Context, state: &mut State, delta: f32) {
-//         // self.body.update(ctx, state, delta)
-//     }
-// }
+    fn update(&mut self, ctx: &mut Context, state: &mut State, delta: f32) {
+        self.anim_container.update_timer();
+        if state.is_down(ctx, util::SPACE) {
+            self.jump();
+        }
+        if state.is_down(ctx, util::RIGHT) {
+            self.body.add_vel(self.movement_force * self.state.move_mult());
+            if self.state == PlayerState::OnWall {self.switch_state(PlayerState::Jumping);}
+            self.spritesheet.change_orientation(Orientation::Right);
+        }
+        if state.is_down(ctx, util::LEFT) {
+            self.body.add_vel(-self.movement_force * self.state.move_mult());
+            if self.state == PlayerState::OnWall {self.switch_state(PlayerState::Jumping);}
+            self.spritesheet.change_orientation(Orientation::Left);
+        }
+        if self.state != PlayerState::Jumping && self.state != PlayerState::OnWall {
+            self.state_control(ctx, state, 0.);
+        }
+
+        if self.state.is_crouched() {
+            self.body.shape.scale(self.crawl_hit_box);
+            // self.body.shape.move_by(self.crawl_hit_box-self.hit_box);
+        } else {
+            self.body.shape.scale(self.hit_box);
+        }
+        self.body.update(delta);
+    }
+}

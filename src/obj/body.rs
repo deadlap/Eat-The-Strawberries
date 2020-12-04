@@ -4,7 +4,7 @@ use crate::{
     utils::util,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Material {
     pub density: f32,
     pub restitution: f32,
@@ -12,7 +12,7 @@ pub struct Material {
     pub dynamic_friction: f32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct MassData {
     pub mass: f32,
     pub inv_mass: f32,
@@ -40,7 +40,7 @@ impl MassData {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Body {
     pub shape: Shape,
     pub material: Material,
